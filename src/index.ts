@@ -85,10 +85,17 @@ class McpServerApp {
             country,
           });
 
+          // Normalize language code (convert zh to zh-cn)
+          const normalizeLanguage = (lang?: string): string => {
+            if (!lang) return 'en';
+            if (location === 'TW' || location === 'HK') return 'zh-tw';
+            return lang === 'zh' ? 'zh-cn' : lang;
+          };
+
           const searchOptions = {
             location: location || 'United States',
             gl: country || 'us',
-            hl: language || 'en',
+            hl: normalizeLanguage(language),
             num: maxResults || 10,
           };
 
