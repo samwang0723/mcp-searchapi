@@ -1,9 +1,10 @@
-# MCP Searchapi Server
+# MCP SearchAPI Server
 
-MCP server for SearchApi.io
+An MCP (Model Context Protocol) server that provides Google Shopping search capabilities using SearchAPI.io. This server allows AI assistants to search for products, compare prices, and retrieve shopping information through a standardized interface.
 
 ## 🚀 Features
 
+- **Google Shopping Search**: Search for products with comprehensive filtering options
 - **TypeScript**: Full type safety with modern TypeScript patterns
 - **HTTP Transport**: RESTful API with Express.js server
 - **Session Management**: Stateful connections with proper session handling
@@ -11,52 +12,26 @@ MCP server for SearchApi.io
 - **Error Handling**: Comprehensive error handling and logging
 - **Health Checks**: Built-in health monitoring endpoints
 - **Docker Support**: Production-ready containerization
-- **Development Tools**: ESLint, Prettier, and testing setup
 - **Production Ready**: Optimized for scalability and security
 
 ## 📋 Prerequisites
 
 - Node.js 20+
 - npm or yarn
+- SearchAPI.io API key
 - Docker (optional, for containerization)
 
 ## 🛠️ Quick Start
 
-### Option 1: Use the Project Generator (Recommended)
+### 1. Installation
 
 ```bash
-# Clone the template
-git clone <your-repo-url>
+# Clone the repository
+git clone https://github.com/your-username/mcp-searchapi.git
 cd mcp-searchapi
-
-
-# Create a new project using the generator
-./create-mcp-project your-project-name --description "Your project description" --author "Your Name"
-
-# Or use the Node.js script directly
-node setup-new-project.js your-project-name --description "Your project description" --author "Your Name"
-```
-
-#### Generator Options:
-
-- `--description <desc>`: Project description
-- `--author <name>`: Author name
-- `--target-dir <dir>`: Target directory (default: mcp-<project-name>)
-- `--install-deps`: Install npm dependencies automatically
-- `--no-git`: Skip git repository initialization
-
-### Option 2: Manual Setup
-
-```bash
-# Clone the template
-git clone <your-repo-url>
-cd mcp-template
 
 # Install dependencies
 npm install
-
-# Copy environment configuration
-cp .env.example .env  # Create this file with your settings
 ```
 
 ### 2. Environment Configuration
@@ -64,14 +39,22 @@ cp .env.example .env  # Create this file with your settings
 Create a `.env` file in the root directory:
 
 ```env
+# SearchAPI Configuration (Required)
+SEARCHAPI_API_KEY=your_searchapi_key_here
+
 # Server Configuration
 PORT=3000
 LOG_LEVEL=info
-
-# Add your custom environment variables here
 ```
 
-### 3. Development
+### 3. Get SearchAPI.io API Key
+
+1. Visit [SearchAPI.io](https://www.searchapi.io/)
+2. Sign up for an account
+3. Get your API key from the dashboard
+4. Add it to your `.env` file
+
+### 4. Development
 
 ```bash
 # Start development server with hot reload
@@ -98,45 +81,47 @@ mcp-searchapi/
 ├── src/
 │   ├── config/           # Configuration management
 │   │   └── index.ts      # Main config file
+│   ├── services/         # Service layer
+│   │   └── searchapi.ts  # SearchAPI.io service
 │   ├── utils/            # Utility functions
+│   │   └── logger.ts     # Logging utilities
 │   └── index.ts          # Main server application
-├── create-mcp-project    # Bash script for project generation
-├── setup-new-project.js  # Node.js project generator
 ├── Dockerfile            # Docker configuration
 ├── package.json          # Dependencies and scripts
 ├── tsconfig.json         # TypeScript configuration
 └── README.md            # This file
 ```
 
-## 🔧 Project Generator
+## 🔧 Available Tools
 
-This template includes powerful project generation tools to quickly create new MCP servers:
+### Google Shopping Search
 
-### Features:
+Search for products on Google Shopping with advanced filtering options.
 
-- **Automatic Name Conversion**: Converts kebab-case names to all required formats (camelCase, PascalCase, etc.)
-- **File Templating**: Updates all files with the new project name and details
-- **Git Integration**: Optionally initializes a new git repository
-- **Dependency Management**: Can automatically install npm dependencies
-- **Smart Copy Logic**: Excludes development files and prevents infinite recursion
+**Tool Name**: `google-shopping-search`
 
-### Usage Examples:
+**Parameters**:
 
-```bash
-# Basic usage
-./create-mcp-project weather-service
+- `query` (required): Search query for products (e.g., "iPhone 15", "running shoes")
+- `location` (optional): Location for search results (e.g., "United States", "New York")
+- `country` (optional): Country code for search results (e.g., "us", "uk", "ca")
+- `language` (optional): Language code for search results (e.g., "en", "es", "fr")
+- `maxResults` (optional): Maximum number of results to return (default: 10)
+- `includeMetadata` (optional): Include search metadata in response (default: false)
 
-# With full options
-./create-mcp-project task-manager \
-  --description "AI-powered task management MCP server" \
-  --author "Your Name" \
-  --install-deps
+**Example Usage**:
 
-# Custom target directory
-./create-mcp-project file-processor --target-dir ./my-custom-server
-
-# Skip git initialization
-./create-mcp-project data-analyzer --no-git
+```json
+{
+  "tool": "google-shopping-search",
+  "arguments": {
+    "query": "wireless headphones",
+    "location": "United States",
+    "country": "us",
+    "language": "en",
+    "maxResults": 5
+  }
+}
 ```
 
 ## 🔧 Architecture
@@ -144,10 +129,11 @@ This template includes powerful project generation tools to quickly create new M
 ### Core Components
 
 1. **McpServerApp**: Main application class that orchestrates the MCP server
-2. **Configuration**: Environment-based configuration with type safety
-3. **Session Management**: HTTP-based stateful sessions with cleanup
-4. **Transport Layer**: StreamableHTTPServerTransport for MCP communication
-5. **Error Handling**: Comprehensive error handling with proper HTTP responses
+2. **SearchApiService**: Service for interacting with SearchAPI.io
+3. **Configuration**: Environment-based configuration with type safety
+4. **Session Management**: HTTP-based stateful sessions with cleanup
+5. **Transport Layer**: StreamableHTTPServerTransport for MCP communication
+6. **Error Handling**: Comprehensive error handling with proper HTTP responses
 
 ### HTTP Endpoints
 
@@ -156,93 +142,24 @@ This template includes powerful project generation tools to quickly create new M
 - `GET /mcp` - Server-to-client notifications via SSE
 - `DELETE /mcp` - Session termination
 
-## 🛠️ Customization Guide
+## 🛠️ Configuration
 
-### Adding New Tools
+### Environment Variables
 
-To add a new MCP tool, modify the `createServer()` method in `src/index.ts`:
+| Variable            | Description                              | Default | Required |
+| ------------------- | ---------------------------------------- | ------- | -------- |
+| `SEARCHAPI_API_KEY` | Your SearchAPI.io API key                | -       | Yes      |
+| `PORT`              | Server port                              | 3000    | No       |
+| `LOG_LEVEL`         | Logging level (debug, info, warn, error) | info    | No       |
 
-```typescript
-// Register your custom tool
-server.tool(
-  'searchapi-tool',
-  'Description of your tool',
-  {
-    // Define input schema using Zod
-    parameter1: z.string().describe('Parameter description'),
-    parameter2: z.number().optional().describe('Optional parameter'),
-  },
-  async ({ parameter1, parameter2 }) => {
-    try {
-      // Your tool implementation here
-      const result = await yourCustomLogic(parameter1, parameter2);
+### SearchAPI.io Configuration
 
-      return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify(result, null, 2),
-          } as TextContent,
-        ],
-      };
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      throw new Error(`Error in your-tool-name: ${errorMessage}`);
-    }
-  }
-);
-```
+The server supports all SearchAPI.io Google Shopping parameters:
 
-### Configuration Management
-
-Add new configuration options in `src/config/index.ts`:
-
-```typescript
-interface Config {
-  logging: LoggingConfig;
-  server: ServerConfig;
-  // Add your custom config sections
-  database: {
-    url: string;
-    timeout: number;
-  };
-  external: {
-    apiKey: string;
-    baseUrl: string;
-  };
-}
-
-const config: Config = {
-  // ... existing config
-  database: {
-    url: process.env.DATABASE_URL || 'sqlite://memory',
-    timeout: parseInt(process.env.DB_TIMEOUT || '5000', 10),
-  },
-  external: {
-    apiKey: process.env.EXTERNAL_API_KEY || '',
-    baseUrl: process.env.EXTERNAL_BASE_URL || 'https://api.example.com',
-  },
-};
-```
-
-### Adding Middleware
-
-Add Express middleware in the `run()` method:
-
-```typescript
-async run() {
-  const app = express();
-  app.use(express.json());
-
-  // Add your custom middleware
-  app.use(cors()); // CORS support
-  app.use(helmet()); // Security headers
-  app.use(morgan('combined')); // Request logging
-
-  // ... rest of the setup
-}
-```
+- **Location-based filtering**: Target specific geographical regions
+- **Language preferences**: Return results in preferred languages
+- **Result limiting**: Control the number of results returned
+- **Metadata inclusion**: Get additional search metadata
 
 ## 🐳 Docker Deployment
 
@@ -253,21 +170,22 @@ async run() {
 docker build -t mcp-searchapi-server .
 
 # Run container
-docker run -p 3000:3000 --env-file .env mcp-searchapi-server
+docker run -p 3000:3000 -e SEARCHAPI_API_KEY=your_key_here mcp-searchapi-server
 ```
 
-### Docker Compose (Recommended)
+### Docker Compose
 
 Create a `docker-compose.yml`:
 
 ```yaml
 version: '3.8'
 services:
-  mcp-server:
+  mcp-searchapi:
     build: .
     ports:
       - '3000:3000'
     environment:
+      - SEARCHAPI_API_KEY=${SEARCHAPI_API_KEY}
       - NODE_ENV=production
       - PORT=3000
       - LOG_LEVEL=info
@@ -282,49 +200,67 @@ services:
 Run with:
 
 ```bash
+# Set your API key in .env file or environment
 docker-compose up -d
+```
+
+## 🔗 MCP Client Integration
+
+### Using with Claude Desktop
+
+Add to your Claude Desktop configuration:
+
+```json
+{
+  "mcpServers": {
+    "mcp-searchapi": {
+      "name": "mcp-searchapi",
+      "type": "streamable-http",
+      "streamable": true,
+      "url": "http://localhost:3000/mcp"
+    }
+  }
+}
+```
+
+### Using with Custom MCP Clients
+
+```typescript
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+
+const client = new Client({
+  name: 'searchapi-client',
+  version: '1.0.0',
+});
+
+// Connect to the server
+await client.connect(transport);
+
+// Use the Google Shopping search tool
+const result = await client.callTool('google-shopping-search', {
+  query: 'laptop',
+  maxResults: 5,
+});
 ```
 
 ## 🔒 Security Best Practices
 
-This template implements several security measures:
-
-- **Input Validation**: Zod schema validation for all tool parameters
+- **API Key Security**: Store your SearchAPI.io API key securely
+- **Input Validation**: All parameters are validated using Zod schemas
 - **Error Handling**: Safe error responses without information leakage
 - **Session Management**: Proper session cleanup and validation
-- **HTTP Security**: Ready for security headers and CORS configuration
-- **Environment Variables**: Secure configuration management
-
-### Recommended Additional Security
-
-```typescript
-// Add security middleware
-import helmet from 'helmet';
-import cors from 'cors';
-import rateLimit from 'express-rate-limit';
-
-app.use(helmet());
-app.use(
-  cors({
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || false,
-  })
-);
-
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
-});
-app.use('/mcp', limiter);
-```
+- **Rate Limiting**: Consider implementing rate limiting for production use
 
 ## 📊 Monitoring and Logging
 
-The template includes basic logging setup. For production, consider adding:
+The server includes comprehensive logging for:
 
-- **Structured Logging**: Winston with JSON format
-- **Metrics Collection**: Prometheus metrics
-- **Health Checks**: Comprehensive health endpoints
-- **APM Integration**: Application Performance Monitoring
+- Search requests and responses
+- Error tracking and debugging
+- Session management events
+- Health check status
+
+Logs are structured JSON format suitable for production monitoring systems.
 
 ## 🧪 Testing
 
@@ -337,21 +273,9 @@ npm run test:watch
 
 # Run tests with coverage
 npm run test:coverage
-```
 
-### Writing Tests
-
-Create test files in `src/**/*.test.ts`:
-
-```typescript
-import { describe, test, expect } from '@jest/globals';
-// Your test imports
-
-describe('YourComponent', () => {
-  test('should handle valid input', async () => {
-    // Test implementation
-  });
-});
+# Test the health endpoint
+curl http://localhost:3000/health
 ```
 
 ## 🚀 Production Deployment
@@ -360,36 +284,27 @@ describe('YourComponent', () => {
 
 ```env
 NODE_ENV=production
+SEARCHAPI_API_KEY=your_production_api_key
 PORT=3000
 LOG_LEVEL=warn
-
-# Add your production-specific variables
-DATABASE_URL=postgresql://...
-REDIS_URL=redis://...
-API_KEYS=...
 ```
 
-### Performance Optimization
+### Performance Considerations
 
-- Enable gzip compression
-- Implement proper caching headers
-- Use connection pooling for databases
+- Monitor API rate limits from SearchAPI.io
+- Implement caching for frequently searched queries
+- Set up proper log rotation
 - Monitor memory usage and implement limits
-- Set up log rotation
 
-### Scaling Considerations
+## 📚 API Documentation
 
-- Load balancing across multiple instances
-- Database connection pooling
-- Session store externalization (Redis)
-- Horizontal pod autoscaling in Kubernetes
+### SearchAPI.io Integration
 
-## 📚 References
+This server integrates with [SearchAPI.io](https://www.searchapi.io/) Google Shopping API. For detailed API documentation and pricing information, visit their documentation.
 
-- [Model Context Protocol Documentation](https://modelcontextprotocol.io/)
-- [MCP SDK Documentation](https://github.com/modelcontextprotocol/typescript-sdk)
-- [Express.js Documentation](https://expressjs.com/)
-- [TypeScript Documentation](https://www.typescriptlang.org/)
+### MCP Protocol
+
+This server implements the [Model Context Protocol](https://modelcontextprotocol.io/) specification for standardized AI assistant integration.
 
 ## 🤝 Contributing
 
@@ -409,9 +324,9 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 For questions and support:
 
 - Check the [MCP Documentation](https://modelcontextprotocol.io/)
-- Review existing issues
-- Create a new issue with detailed information
+- Review [SearchAPI.io Documentation](https://www.searchapi.io/docs)
+- Create an issue with detailed information
 
 ---
 
-**Happy coding! 🎉**
+**Start searching for products with AI! 🛍️**
